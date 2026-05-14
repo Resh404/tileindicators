@@ -74,6 +74,7 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 	@Getter(AccessLevel.PACKAGE)
 	private final Set<NPC> onTopNpcs = new HashSet<>();
 	private List<String> onTopNPCNames = new ArrayList<>();
+	private List<String> excludedNPCNames = new ArrayList<>();
 
 	private static final String DRAW_ABOVE = "Draw-Above";
 	private static final String DRAW_BELOW = "Draw-Below";
@@ -160,6 +161,7 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 		{
 			final String npcName = getNameForCachedNPC(event.getIdentifier());
 			if (npcName == null) return;
+			if (excludedMatchesNPCName(npcName)) return;
 			boolean matchesList = onTopNPCNames.stream()
 					.filter(highlight -> !highlight.equalsIgnoreCase(npcName))
 					.anyMatch(highlight -> WildcardMatcher.matches(highlight, npcName));
@@ -210,9 +212,22 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 		return Text.fromCSV(configNpcs);
 	}
 
+	List<String> getExcludedNPCs()
+	{
+		final String configNpcs = config.getExcludedNPCs();
+
+		if (configNpcs.isEmpty())
+		{
+			return Collections.emptyList();
+		}
+
+		return Text.fromCSV(configNpcs);
+	}
+
 	void rebuild()
 	{
 		onTopNPCNames = getTopNPCs();
+		excludedNPCNames = getExcludedNPCs();
 		onTopNpcs.clear();
 
 		if (client.getGameState() != GameState.LOGGED_IN &&
@@ -239,7 +254,25 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 
 	private boolean onTopMatchesNPCName(String npcName)
 	{
+		if (excludedMatchesNPCName(npcName))
+		{
+			return false;
+		}
+
 		for (String matching : onTopNPCNames)
+		{
+			if (WildcardMatcher.matches(matching, npcName))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private boolean excludedMatchesNPCName(String npcName)
+	{
+		for (String matching : excludedNPCNames)
 		{
 			if (WildcardMatcher.matches(matching, npcName))
 			{
