@@ -148,4 +148,23 @@ public interface ImprovedTileIndicatorsConfig extends Config
 			description = ""
 	)
 	void setTopNPCs(String npcsToDrawAbove);
+
+	@ConfigItem(
+			keyName = "excludedNPCs",
+			name = "NPC IDs to not draw overlay on",
+			description = "Comma-separated list of NPC IDs to exclude from overlay draw-above / draw-below behavior.",
+			section = npcIndicatorsSection,
+			position = 9
+	)
+	default String getExcludedNPCs()
+	{
+		return "";
+	}
+
+	@ConfigItem(
+			keyName = "excludedNPCs",
+			name = "",
+			description = ""
+	)
+	void setExcludedNPCs(String excludedNPCs);
 }
