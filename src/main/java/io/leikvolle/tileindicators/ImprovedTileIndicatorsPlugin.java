@@ -114,7 +114,7 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 	@Subscribe
 	public void onConfigChanged(ConfigChanged configChanged)
 	{
-		if (!configChanged.getGroup().equals("improvedtileindicators"))
+		if (!configChanged.getGroup().equals("tileoverlayindicators"))
 		{
 			return;
 		}

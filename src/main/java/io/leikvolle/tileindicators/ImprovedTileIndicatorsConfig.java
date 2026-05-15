@@ -29,7 +29,7 @@ import java.awt.Color;
 
 import net.runelite.client.config.*;
 
-@ConfigGroup("improvedtileindicators")
+@ConfigGroup("tileoverlayindicators")
 public interface ImprovedTileIndicatorsConfig extends Config
 {
 
