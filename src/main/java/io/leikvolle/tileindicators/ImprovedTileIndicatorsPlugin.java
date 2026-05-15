@@ -50,9 +50,11 @@ import net.runelite.client.util.WildcardMatcher;
 import java.util.*;
 
 @PluginDescriptor(
-		name = "Improved Tile Indicators",
-		description = "An improved version of the tile indicators plugin",
-		tags = {"rs3", "overlay", "tile", "indicators"}
+		name = "Tile Overlay Indicators",
+		configName = "tileoverlayindicatorsplugin",
+		description = "Tile overlay for NPCs, and players.",
+		tags = {"overlay", "tile", "indicators", "highlight", "draw"},
+		conflicts = {"Improved Tile Indicators"}
 )
 @Slf4j
 public class ImprovedTileIndicatorsPlugin extends Plugin
