@@ -1,22 +1,19 @@
 # Improved Tile Indicators
 Forked from [LeikvollE/tileindicators](https://github.com/LeikvollE/tileindicators).
 
-An improved version of tile indicators
+Improved integration with better npc highlights.
 
 ## Features
-### Draw behind player
-Draws overlays behind the player
+### Do not draw on specific NPCs 
+In cases where you want to avoid drawing on specific NPCs, you can add their names to the "Do not draw on NPCs" list. 
+This is useful for situations like earthen shield at doom, vanguards at COX etc.
 
-![](truetile.png)
-![](truetilegpu.png)
+NPCs that have not been added to exlusion list:
 
-### Draw behind NPC
-Draws overlays behind the NPCs. Should not be used for large groups of NPCs, but rather for bosses or smaller groups of NPCs.
+![](without.png)
 
-![](menu.png)
-![](Hunllef.png)
+NPCs that have been added to exlusion list:
 
-### Destination tile style
-Allows you to change the destination tile style
+![](with.png)
 
-![](rs3destination.png)
+![](UI.png)
