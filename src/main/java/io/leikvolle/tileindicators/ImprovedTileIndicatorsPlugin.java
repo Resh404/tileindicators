@@ -76,7 +76,8 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 	@Getter(AccessLevel.PACKAGE)
 	private final Set<NPC> onTopNpcs = new HashSet<>();
 	private List<String> onTopNPCNames = new ArrayList<>();
-	private List<Integer> excludedNPCIds = new ArrayList<>();
+	private List<String> excludedNPCNames = new ArrayList<>();
+	private final Set<Integer> excludedNPCIds = new HashSet<>();
 
 	private static final String DRAW_ABOVE = "Draw-Above";
 	private static final String DRAW_BELOW = "Draw-Below";
@@ -133,7 +134,12 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 			return;
 		}
 
-		if (onTopMatchesNPCName(npcName) && !excludedMatchesNPCId(npc.getId()))
+		if (excludedMatchesNPC(npc))
+		{
+			return;
+		}
+
+		if (onTopMatchesNPCName(npcName))
 		{
 			onTopNpcs.add(npc);
 		}
@@ -165,7 +171,7 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 			if (npc == null) return;
 			final String npcName = getNameForCachedNPC(event.getIdentifier());
 			if (npcName == null) return;
-			if (excludedMatchesNPCId(npc.getId())) return;
+			if (excludedMatchesNPC(npc)) return;
 			boolean matchesList = onTopNPCNames.stream()
 					.filter(highlight -> !highlight.equalsIgnoreCase(npcName))
 					.anyMatch(highlight -> WildcardMatcher.matches(highlight, npcName));
@@ -216,7 +222,7 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 		return Text.fromCSV(configNpcs);
 	}
 
-	List<Integer> getExcludedNPCs()
+	List<String> getExcludedNPCs()
 	{
 		final String configNpcs = config.getExcludedNPCs();
 
@@ -225,27 +231,14 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 			return Collections.emptyList();
 		}
 
-		final List<Integer> excludedIds = new ArrayList<>();
-
-		for (String configNpc : Text.fromCSV(configNpcs))
-		{
-			try
-			{
-				excludedIds.add(Integer.parseInt(configNpc.trim()));
-			}
-			catch (NumberFormatException e)
-			{
-				log.debug("Skipping invalid excluded NPC id '{}'.", configNpc);
-			}
-		}
-
-		return excludedIds;
+		return Text.fromCSV(configNpcs);
 	}
 
 	void rebuild()
 	{
 		onTopNPCNames = getTopNPCs();
-		excludedNPCIds = getExcludedNPCs();
+		excludedNPCNames = getExcludedNPCs();
+		excludedNPCIds.clear();
 		onTopNpcs.clear();
 
 		if (client.getGameState() != GameState.LOGGED_IN &&
@@ -263,7 +256,12 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 				continue;
 			}
 
-			if (onTopMatchesNPCName(npcName) && !excludedMatchesNPCId(npc.getId()))
+			if (excludedMatchesNPC(npc))
+			{
+				continue;
+			}
+
+			if (onTopMatchesNPCName(npcName))
 			{
 				onTopNpcs.add(npc);
 			}
@@ -283,11 +281,26 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 		return false;
 	}
 
-	private boolean excludedMatchesNPCId(int npcId)
+	private boolean excludedMatchesNPC(NPC npc)
 	{
-		for (int excludedNpcId : excludedNPCIds)
+		final String npcName = npc.getName();
+
+		if (npcName != null && excludedMatchesNPCName(npcName))
 		{
-			if (excludedNpcId == npcId)
+			excludedNPCIds.add(npc.getId());
+			return true;
+		}
+
+		return excludedNPCIds.contains(npc.getId());
+	}
+
+	private boolean excludedMatchesNPCName(String npcName)
+	{
+		for (String matching : excludedNPCNames)
+		{
+			final String pattern = matching.trim();
+
+			if (!pattern.isEmpty() && WildcardMatcher.matches(pattern, npcName))
 			{
 				return true;
 			}

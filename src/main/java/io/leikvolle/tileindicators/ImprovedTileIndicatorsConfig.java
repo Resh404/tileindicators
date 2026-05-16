@@ -151,8 +151,8 @@ public interface ImprovedTileIndicatorsConfig extends Config
 
 	@ConfigItem(
 			keyName = "excludedNPCs",
-			name = "NPC IDs to not draw overlay on",
-			description = "Comma-separated list of NPC IDs to exclude from overlay draw-above / draw-below behavior.",
+			name = "NPC names to exclude",
+			description = "Comma-separated list of NPC names or wildcard patterns. Matching NPCs in the current scene are resolved to NPC IDs internally.",
 			section = npcIndicatorsSection,
 			position = 9
 	)

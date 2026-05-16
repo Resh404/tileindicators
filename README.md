@@ -8,6 +8,10 @@ Improved integration with better npc highlights.
 In cases where you want to avoid drawing on specific NPCs, you can add their names to the "Do not draw on NPCs" list. 
 This is useful for situations like earthen shield at doom, vanguards at COX etc.
 
+Wildcard patterns are supported for awkward edge cases, for example Earthen shield:
+*shield*
+*earthen*
+
 NPCs that have not been added to exlusion list:
 
 ![](without.png)
