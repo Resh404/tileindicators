@@ -1,28 +1,3 @@
-/*
- * Copyright (c) 2021, LeikvollE
- * Copyright (c) 2018, Tomas Slusny <slusnucky@gmail.com>
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice, this
- *    list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
- * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- * WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR
- * ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
- * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
 package io.leikvolle.tileindicators;
 
 import com.google.inject.Provides;
@@ -30,16 +5,17 @@ import javax.inject.Inject;
 
 import lombok.AccessLevel;
 import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import net.runelite.api.*;
 import net.runelite.api.events.*;
+import java.awt.event.KeyEvent;
 
 import static net.runelite.api.MenuAction.MENU_ACTION_DEPRIORITIZE_OFFSET;
 
 import net.runelite.client.callback.ClientThread;
 import net.runelite.client.config.ConfigManager;
 import net.runelite.client.events.ConfigChanged;
-import net.runelite.client.events.PluginChanged;
+import net.runelite.client.input.KeyListener;
+import net.runelite.client.input.KeyManager;
 import net.runelite.client.plugins.Plugin;
 import net.runelite.client.plugins.PluginDescriptor;
 import net.runelite.client.eventbus.Subscribe;
@@ -53,17 +29,23 @@ import java.util.*;
 		name = "Tile Overlay Indicators",
 		configName = "tileoverlayindicatorsplugin",
 		description = "Tile overlay for NPCs, and players.",
-		tags = {"overlay", "tile", "indicators", "highlight", "draw"},
+		tags = {"overlay", "tile", "indicator", "highlight", "draw", "color", "npc", "tick", "metronome", "counter"},
 		conflicts = {"Improved Tile Indicators"}
 )
-@Slf4j
 public class ImprovedTileIndicatorsPlugin extends Plugin
+implements KeyListener
 {
 	@Inject
 	private OverlayManager overlayManager;
 
 	@Inject
 	private ImprovedTileIndicatorsOverlay overlay;
+
+	@Inject
+	private PlayerTileTickCounterOverlay playerTileTickCounterOverlay;
+
+	@Inject
+	private PlayerTileMetronomeController playerTileMetronomeController;
 
 	@Inject ImprovedTileIndicatorsConfig config;
 
@@ -73,6 +55,9 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 	@Inject
 	private ClientThread clientThread;
 
+	@Inject
+	private KeyManager keyManager;
+
 	@Getter(AccessLevel.PACKAGE)
 	private final Set<NPC> onTopNpcs = new HashSet<>();
 	private List<String> onTopNPCNames = new ArrayList<>();
@@ -81,8 +66,6 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 
 	private static final String DRAW_ABOVE = "Draw-Above";
 	private static final String DRAW_BELOW = "Draw-Below";
-	private static final String UNTAG_ALL = "Un-tag-All";
-
 	@Provides
 	ImprovedTileIndicatorsConfig provideConfig(ConfigManager configManager)
 	{
@@ -93,6 +76,8 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 	protected void startUp()
 	{
 		overlayManager.add(overlay);
+		overlayManager.add(playerTileTickCounterOverlay);
+		keyManager.registerKeyListener(this);
 		clientThread.invoke(this::rebuild);
 	}
 
@@ -100,27 +85,60 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 	protected void shutDown()
 	{
 		overlayManager.remove(overlay);
+		overlayManager.remove(playerTileTickCounterOverlay);
+		keyManager.unregisterKeyListener(this);
+	}
+
+	@Subscribe
+	public void onGameTick(GameTick event)
+	{
+		playerTileMetronomeController.onGameTick();
+	}
+
+	@Override
+	public void keyPressed(KeyEvent e)
+	{
+		if (config.playerMetronomeSyncHotkey().matches(e)) playerTileMetronomeController.resetSyncState();
+	}
+
+	@Override
+	public void keyReleased(KeyEvent e)
+	{
+	}
+
+	@Override
+	public void keyTyped(KeyEvent e)
+	{
 	}
 
 	@Subscribe
 	public void onGameStateChanged(GameStateChanged event)
 	{
-		if (event.getGameState() == GameState.LOGIN_SCREEN ||
-				event.getGameState() == GameState.HOPPING)
-		{
-			onTopNpcs.clear();
-		}
+		if (event.getGameState() == GameState.LOGIN_SCREEN || event.getGameState() == GameState.HOPPING) onTopNpcs.clear();
 	}
 
 	@Subscribe
 	public void onConfigChanged(ConfigChanged configChanged)
 	{
-		if (!configChanged.getGroup().equals("tileoverlayindicators"))
-		{
-			return;
-		}
+		if (!configChanged.getGroup().equals("tileoverlayindicators")) return;
 
+		if (shouldResetMetronomeSync(configChanged.getKey())) playerTileMetronomeController.resetSyncState();
+
+		playerTileMetronomeController.onConfigChanged();
 		clientThread.invoke(this::rebuild);
+	}
+
+	private boolean shouldResetMetronomeSync(String keyName)
+	{
+		if ("enablePlayerTileMetronome".equals(keyName)) return config.enablePlayerTileMetronome();
+
+		if ("syncPlayerTrueTileFillColor".equals(keyName)) return config.syncPlayerTrueTileFillColor();
+
+		if ("syncTickCounter1ColorWithTile".equals(keyName)) return config.syncTickCounter1ColorWithTile();
+
+		if ("syncTickCounter2ColorWithTile".equals(keyName)) return config.syncTickCounter2ColorWithTile();
+
+		return false;
 	}
 
 	@Subscribe
@@ -129,20 +147,11 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 		final NPC npc = npcSpawned.getNpc();
 		final String npcName = npc.getName();
 
-		if (npcName == null)
-		{
-			return;
-		}
+		if (npcName == null) return;
 
-		if (excludedMatchesNPC(npc))
-		{
-			return;
-		}
+		if (excludedMatchesNPC(npc)) return;
 
-		if (onTopMatchesNPCName(npcName))
-		{
-			onTopNpcs.add(npc);
-		}
+		if (onTopMatchesNPCName(npcName)) onTopNpcs.add(npc);
 	}
 
 	@Subscribe
@@ -158,10 +167,7 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 	{
 		int type = event.getType();
 
-		if (type >= MENU_ACTION_DEPRIORITIZE_OFFSET)
-		{
-			type -= MENU_ACTION_DEPRIORITIZE_OFFSET;
-		}
+		if (type >= MENU_ACTION_DEPRIORITIZE_OFFSET) type -= MENU_ACTION_DEPRIORITIZE_OFFSET;
 
 		final MenuAction menuAction = MenuAction.of(type);
 
@@ -179,7 +185,7 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 			// Only show draw options to npcs not affected by a wildcard entry, as wildcards will not be removed by menu options
 			if (!matchesList)
 			{
-				client.createMenuEntry(-1)
+				client.getMenu().createMenuEntry(-1)
 					.setOption(onTopNPCNames.stream().anyMatch(npcName::equalsIgnoreCase) ? DRAW_BELOW : DRAW_ABOVE)
 					.setTarget(event.getTarget())
 					.setIdentifier(event.getIdentifier())
@@ -201,10 +207,7 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 	{
 		final List<String> highlightedNpcs = new ArrayList<>(onTopNPCNames);
 
-		if (!highlightedNpcs.removeIf(npc::equalsIgnoreCase))
-		{
-			highlightedNpcs.add(npc);
-		}
+		if (!highlightedNpcs.removeIf(npc::equalsIgnoreCase)) highlightedNpcs.add(npc);
 
 		// this triggers the config change event and rebuilds npcs
 		config.setTopNPCs(Text.toCSV(highlightedNpcs));
@@ -214,10 +217,7 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 	{
 		final String configNpcs = config.getTopNPCs();
 
-		if (configNpcs.isEmpty())
-		{
-			return Collections.emptyList();
-		}
+		if (configNpcs.isEmpty()) return Collections.emptyList();
 
 		return Text.fromCSV(configNpcs);
 	}
@@ -226,10 +226,7 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 	{
 		final String configNpcs = config.getExcludedNPCs();
 
-		if (configNpcs.isEmpty())
-		{
-			return Collections.emptyList();
-		}
+		if (configNpcs.isEmpty()) return Collections.emptyList();
 
 		return Text.fromCSV(configNpcs);
 	}
@@ -241,30 +238,17 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 		excludedNPCIds.clear();
 		onTopNpcs.clear();
 
-		if (client.getGameState() != GameState.LOGGED_IN &&
-				client.getGameState() != GameState.LOADING)
-		{
-			return;
-		}
+		if (client.getGameState() != GameState.LOGGED_IN && client.getGameState() != GameState.LOADING) return;
 
-		for (NPC npc : client.getNpcs())
+		for (NPC npc : client.getTopLevelWorldView().npcs())
 		{
 			final String npcName = npc.getName();
 
-			if (npcName == null)
-			{
-				continue;
-			}
+			if (npcName == null) continue;
 
-			if (excludedMatchesNPC(npc))
-			{
-				continue;
-			}
+			if (excludedMatchesNPC(npc)) continue;
 
-			if (onTopMatchesNPCName(npcName))
-			{
-				onTopNpcs.add(npc);
-			}
+			if (onTopMatchesNPCName(npcName)) onTopNpcs.add(npc);
 		}
 	}
 
@@ -272,10 +256,7 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 	{
 		for (String matching : onTopNPCNames)
 		{
-			if (WildcardMatcher.matches(matching, npcName))
-			{
-				return true;
-			}
+			if (WildcardMatcher.matches(matching, npcName)) return true;
 		}
 
 		return false;
@@ -294,16 +275,18 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 		return excludedNPCIds.contains(npc.getId());
 	}
 
+	boolean isExcludedNpc(NPC npc)
+	{
+		return excludedMatchesNPC(npc);
+	}
+
 	private boolean excludedMatchesNPCName(String npcName)
 	{
 		for (String matching : excludedNPCNames)
 		{
 			final String pattern = matching.trim();
 
-			if (!pattern.isEmpty() && WildcardMatcher.matches(pattern, npcName))
-			{
-				return true;
-			}
+			if (!pattern.isEmpty() && WildcardMatcher.matches(pattern, npcName)) return true;
 		}
 
 		return false;
@@ -313,10 +296,7 @@ public class ImprovedTileIndicatorsPlugin extends Plugin
 	{
 		final NPC npc = client.getTopLevelWorldView().npcs().byIndex(id);
 
-		if (npc == null)
-		{
-			return null;
-		}
+		if (npc == null) return null;
 
 		return npc.getName();
 	}
