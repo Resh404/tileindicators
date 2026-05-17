@@ -1,9 +1,9 @@
-# Improved Tile Indicators
-Forked from [LeikvollE/tileindicators](https://github.com/LeikvollE/tileindicators).
+# Tile Overlay Indicators
+This repository is now maintained as a standalone plugin.
 
-Improved integration with better npc highlights.
+It originally started from [LeikvollE/tileindicators](https://github.com/LeikvollE/tileindicators), but development here is now independent.
 
-## Features
+## V.1.1
 ### Do not draw on specific NPCs 
 In cases where you want to avoid drawing on specific NPCs, you can add their names to the "Do not draw on NPCs" list. 
 This is useful for situations like earthen shield at doom, vanguards at COX etc.
@@ -12,12 +12,28 @@ Wildcard patterns are supported for awkward edge cases, for example Earthen shie
 *shield*
 *earthen*
 
-NPCs that have not been added to exlusion list:
+<table>
+	<tr>
+		<td><strong>NPCs not added to exclusion list</strong></td>
+		<td><strong>NPCs added to exclusion list</strong></td>
+	</tr>
+	<tr>
+		<td><img src="without.png" alt="NPCs not added to exclusion list" /></td>
+		<td><img src="with.png" alt="NPCs added to exclusion list" /></td>
+	</tr>
+</table>
 
-![](without.png)
+## V.1.2
+### Player tile metronome
+The plugin can cycle the local player's true-tile color every game tick while keeping this plugin's own tile style.
 
-NPCs that have been added to exlusion list:
+You can configure:
 
-![](with.png)
+- a tile metronome color cycle of 2 to 10 colors
+- 10 selectable colors
+- two independent player tick counters
+- per-counter color sync with the current tile color
+- per-counter position
+- per-counter X/Y offsets
 
-![](UI.png)
+![](docs/gifs/2026-05-17_20-22-49_00-04_to_00-12.gif)
