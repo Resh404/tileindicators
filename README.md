@@ -38,4 +38,4 @@ You can configure:
 
 | | |
 |---|---|
-| ![](docs\gifs\Animation.gif) | ![](docs\gifs\Animation1.gif) |
+| ![](Animation.gif) | ![](Animation1.gif) |
