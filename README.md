@@ -36,6 +36,10 @@ You can configure:
 - per-counter position
 - per-counter X/Y offsets
 
-| | |
-|---|---|
-| ![](Animation.gif) | ![](Animation1.gif) |
+<table>
+	<tr>
+		<td><img src="Animation.gif" alt="True tile metronome" /></td>
+		<td><img src="Animation1.gif" alt="True tile metronome" /></td>
+	</tr>
+</table>
+
