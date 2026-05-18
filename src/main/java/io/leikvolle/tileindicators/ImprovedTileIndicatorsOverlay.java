@@ -21,6 +21,7 @@ import net.runelite.api.Perspective;
 import net.runelite.api.Player;
 import net.runelite.api.Point;
 import net.runelite.api.coords.LocalPoint;
+import net.runelite.api.coords.WorldPoint;
 import net.runelite.client.ui.overlay.Overlay;
 import net.runelite.client.ui.overlay.OverlayLayer;
 import net.runelite.client.ui.overlay.OverlayPosition;
@@ -65,8 +66,10 @@ public class ImprovedTileIndicatorsOverlay extends Overlay
 		final Player localPlayer = client.getLocalPlayer();
         if (localPlayer == null) return null;
 
-        final LocalPoint playerPosLocal = localPlayer.getLocalLocation();
-        if (playerPosLocal == null) return null;
+		final LocalPoint playerPosLocal = localPlayer.getLocalLocation();
+		if (playerPosLocal == null) return null;
+
+		final LocalPoint playerMetronomeTileLocal = getPlayerMetronomeTileLocal(localPlayer, playerPosLocal);
 
         if (config.customDestinationTile())
         {
@@ -95,7 +98,7 @@ public class ImprovedTileIndicatorsOverlay extends Overlay
             }
         }
 
-        if (config.enablePlayerTileMetronome()) renderPlayerMetronomeTile(graphics, playerPosLocal);
+        if (config.enablePlayerTileMetronome() && playerMetronomeTileLocal != null) renderPlayerMetronomeTile(graphics, playerMetronomeTileLocal);
 
         if (config.overlaysBelowPlayer() && client.isGpu()) removePlayer(graphics, localPlayer);
 
@@ -109,6 +112,14 @@ public class ImprovedTileIndicatorsOverlay extends Overlay
                 .forEach(npc -> removeNpc(graphics, npc));
         }
         return null;
+    }
+
+    private LocalPoint getPlayerMetronomeTileLocal(Player localPlayer, LocalPoint playerPosLocal)
+    {
+        if (!config.usePlayerTrueTileForMetronome()) return playerPosLocal;
+
+        final WorldPoint playerTrueTile = localPlayer.getWorldLocation();
+        return playerTrueTile == null ? null : LocalPoint.fromWorld(client, playerTrueTile);
     }
 
 	private void renderPlayerMetronomeTile(Graphics2D graphics, LocalPoint playerPosLocal)

@@ -76,11 +76,23 @@ public interface ImprovedTileIndicatorsConfig extends Config
 	}
 
 	@ConfigItem(
+			keyName = "usePlayerTrueTileForMetronome",
+			name = "Use true tile position",
+			description = "Uses the player's actual true tile position for the metronome overlay instead of the regular player tile",
+			section = playerTileMetronomeSection,
+			position = 4
+	)
+	default boolean usePlayerTrueTileForMetronome()
+	{
+		return true;
+	}
+
+	@ConfigItem(
 			keyName = "syncPlayerTrueTileFillColor",
 			name = "Sync fill color with metronome",
 			description = "Uses the current metronome color for the tile fill while keeping the configured fill opacity",
 			section = playerTileMetronomeSection,
-			position = 4
+			position = 5
 	)
 	default boolean syncPlayerTrueTileFillColor()
 	{
@@ -96,7 +108,7 @@ public interface ImprovedTileIndicatorsConfig extends Config
 			name = "Border width",
 			description = "Border width used for the player true tile overlay",
 			section = playerTileMetronomeSection,
-			position = 5
+			position = 6
 	)
 	default int playerTrueTileBorderWidth()
 	{
@@ -108,7 +120,7 @@ public interface ImprovedTileIndicatorsConfig extends Config
 			name = "Corners only",
 			description = "Draw only the corners of the player true tile overlay",
 			section = playerTileMetronomeSection,
-			position = 6
+			position = 7
 	)
 	default boolean playerTrueTileCornersOnly()
 	{
@@ -124,7 +136,7 @@ public interface ImprovedTileIndicatorsConfig extends Config
 			name = "Corner size",
 			description = "Length of the corner segments when corners only is enabled. Lower values make longer corners",
 			section = playerTileMetronomeSection,
-			position = 7
+			position = 8
 	)
 	default int playerTrueTileCornerSize()
 	{
@@ -136,7 +148,7 @@ public interface ImprovedTileIndicatorsConfig extends Config
 			name = "Sync hotkey",
 			description = "Resets the player true tile metronome color cycle and both counters so they sync together again",
 			section = playerTileMetronomeSection,
-			position = 8
+			position = 9
 	)
 	default Keybind playerMetronomeSyncHotkey()
 	{
