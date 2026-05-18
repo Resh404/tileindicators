@@ -38,8 +38,8 @@ You can configure:
 
 <table>
 	<tr>
-		<td><img src="Animation.gif" alt="True tile metronome" /></td>
-		<td><img src="Animation1.gif" alt="True tile metronome" /></td>
+		<td><img src="https://github.com/Resh404/tileindicators/blob/3dfd0fcf47e78e5187c702cf274d279e0593b987/Animation.gif" alt="True tile metronome" /></td>
+		<td><img src="https://github.com/Resh404/tileindicators/blob/3dfd0fcf47e78e5187c702cf274d279e0593b987/Animation1.gif" alt="True tile metronome" /></td>
 	</tr>
 </table>
 
