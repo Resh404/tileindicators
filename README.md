@@ -36,4 +36,6 @@ You can configure:
 - per-counter position
 - per-counter X/Y offsets
 
-![](docs/gifs/2026-05-17_20-22-49_00-04_to_00-12.gif)
+| | |
+|---|---|
+| ![](docs\gifs\Animation.gif) | ![](docs\gifs\Animation1.gif) |
